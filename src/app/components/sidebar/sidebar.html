@@ -1,0 +1,49 @@
+<aside
+    class="w-80 h-full flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark animate-slide-up">
+    <div class="p-4 space-y-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold">Chats</h1>
+            <div class="flex gap-2">
+                <button (click)="openNewChatDialog()"
+                    class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors hover-lift"
+                    title="New chat">
+                    <span class="material-symbols-outlined">edit_square</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <!-- Conversation Items -->
+        <a *ngFor="let conv of conversations" [routerLink]="['/chat', conv.id]"
+            routerLinkActive="bg-primary/10 border-l-4 border-primary [&>div>p]:font-semibold [&>div>p]:text-slate-700 dark:[&>div>p]:text-slate-200"
+            [routerLinkActiveOptions]="{exact: true}"
+            class="flex items-center gap-3 p-3 transition-colors cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 block hover-lift">
+            <div class="relative h-12 w-12 flex-shrink-0">
+                <img class="h-full w-full rounded-full object-cover" [src]="getOtherParticipant(conv)?.avatarUrl" />
+                <div class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-background-dark"
+                    [class.status-online]="getOtherParticipant(conv)?.isActive"
+                    [class.bg-slate-400]="!getOtherParticipant(conv)?.isActive">
+                    </div>
+                </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-baseline">
+                    <p class="text-sm font-bold truncate">{{ getOtherParticipant(conv)?.fullName }}</p>
+                    <span class="text-[10px] text-slate-400">{{ getTimeAgo(conv.updatedAt) }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <p class="flex-1 text-xs truncate text-slate-500">{{ getLastMessage(conv)?.content || 'Sent a photo' }}</p>
+                    <span *ngIf="messageNotificationService.unreadCount(conv.id) > 0"
+                        class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white animate-pop-in">
+                        {{ messageNotificationService.unreadCount(conv.id) }}
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+</aside>
+<!-- New Chat Dialog Modal -->
+<app-new-chat-dialog
+    *ngIf="showNewChatDialog"
+    (close)="closeNewChatDialog()"
+    (userSelected)="onUserSelectedForChat($event)">
+</app-new-chat-dialog>

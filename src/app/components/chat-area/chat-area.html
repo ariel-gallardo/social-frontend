@@ -1,0 +1,173 @@
+<section class="flex-1 min-w-0 flex flex-col h-full bg-slate-50 dark:bg-slate-900/50 animate-fade-in" *ngIf="activeConversation">
+    <!-- Chat Header -->
+    <header
+        class="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-4 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-full overflow-hidden relative">
+                <img class="h-full w-full object-cover" [src]="getOtherParticipant(activeConversation)?.avatarUrl" />
+            </div>
+            <div>
+                <p class="text-sm font-bold">{{ getOtherParticipant(activeConversation)?.fullName }}</p>
+                <p class="text-[11px] font-medium"
+                    [class.text-green-500]="getOtherParticipant(activeConversation)?.isActive"
+                    [class.text-slate-400]="!getOtherParticipant(activeConversation)?.isActive">
+                    {{ onlineLabel(activeConversation) }}
+                </p>
+                <p *ngIf="isOtherTyping" class="text-[11px] text-primary font-medium">
+                    {{ otherTypingName }} is typing{{ typingDots }}
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="p-2 text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <span class="material-symbols-outlined">call</span>
+            </button>
+            <button class="p-2 text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <span class="material-symbols-outlined">videocam</span>
+            </button>
+            <button
+                *ngIf="!isConversationBlocked"
+                class="p-2 text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                [disabled]="blockActionLoading"
+                title="Bloquear usuario"
+                (click)="blockCurrentConversationUser()">
+                <span class="material-symbols-outlined">block</span>
+            </button>
+            <button
+                *ngIf="isBlockedByMe"
+                class="px-3 py-1.5 text-xs font-semibold rounded-full border border-amber-400 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950 disabled:opacity-60 disabled:cursor-not-allowed"
+                [disabled]="blockActionLoading"
+                (click)="unblockCurrentConversationUser()">
+                {{ blockActionLoading ? 'Procesando...' : 'Desbloquear' }}
+            </button>
+            <button class="p-2 text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <span class="material-symbols-outlined">info</span>
+            </button>
+        </div>
+    </header>
+    <!-- Messages Area -->
+    <div id="chat-messages-scroll" class="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 custom-scrollbar relative" (scroll)="onMessagesScroll($event)">
+        <div *ngIf="loadingInitialMessages" class="absolute inset-x-0 top-0 z-10 flex items-center justify-center py-2 pointer-events-none">
+            <div class="rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-3 py-1 flex items-center gap-2">
+                <span class="chat-spinner"></span>
+                <span class="text-[11px] text-slate-500">Cargando mensajes...</span>
+            </div>
+        </div>
+        <div *ngIf="hasMoreMessages && !loadingOlderMessages" class="sticky top-1 z-[5] flex justify-center pointer-events-none">
+            <span class="rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-3 py-1 text-[11px] text-slate-500 shadow-sm">
+                Hay mensajes anteriores ↑
+            </span>
+        </div>
+        <!-- Loading older messages spinner -->
+        <div *ngIf="loadingOlderMessages" class="flex items-center justify-center gap-2 py-3">
+            <span class="chat-spinner"></span>
+            <span class="text-xs text-slate-400 dark:text-slate-500">Cargando mensajes anteriores...</span>
+        </div>
+        <div class="flex flex-col flex-1 justify-end">
+            <div class="flex flex-col items-center py-8">
+                <div class="h-20 w-20 rounded-full mb-3">
+                    <img class="h-full w-full rounded-full object-cover"
+                        [src]="getOtherParticipant(activeConversation)?.avatarUrl" />
+                </div>
+                <h3 class="font-bold text-lg">{{ getOtherParticipant(activeConversation)?.fullName }}</h3>
+                <p class="text-slate-500 text-sm">You're friends on SocialNet</p>
+            </div>
+            <div *ngFor="let msg of activeConversation.messages; let i = index">
+                <div *ngIf="shouldShowDateHeader(activeConversation.messages, i)" class="flex justify-center my-3">
+                    <span class="text-[10px] uppercase tracking-wide bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500">
+                        {{ formatDateHeader(msg.timestamp) }}
+                    </span>
+                </div>
+                <div
+                    [ngClass]="msg.sender.id === me?.id ? 'flex flex-col items-end gap-2 ml-auto max-w-[70%]' : 'flex flex-col gap-2 max-w-[70%] mt-4'">
+                    <div *ngIf="msg.content"
+                        [ngClass]="msg.sender.id === me?.id ? 'bg-primary text-white p-3 rounded-2xl rounded-br-none' : 'bg-slate-200 dark:bg-slate-800 p-3 rounded-2xl rounded-bl-none'">
+                        <p class="text-sm">{{ msg.content }}</p>
+                    </div>
+                    <div *ngIf="msg.imageUrl"
+                        class="rounded-xl overflow-hidden mt-1 border border-slate-200 dark:border-slate-700">
+                        <img *ngIf="isImageUrl(msg.imageUrl)" class="w-full object-cover max-h-60" [src]="msg.imageUrl" />
+                        <a *ngIf="!isImageUrl(msg.imageUrl)" class="text-sm underline text-primary p-3 block"
+                            [href]="msg.imageUrl" [download]="downloadName(msg)">
+                            Download {{ downloadName(msg) }}
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[10px] text-slate-400" [ngClass]="{'ml-1': msg.sender.id !== me?.id}">{{
+                            formatTime(msg.timestamp)
+                            }}</span>
+                        <span *ngIf="msg.sender.id === me?.id"
+                            class="material-symbols-outlined text-[12px]"
+                            [class.text-primary]="messageStatusIcon(msg) === 'done_all'"
+                            [class.text-slate-400]="messageStatusIcon(msg) === 'check_circle'">{{ messageStatusIcon(msg) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div *ngIf="showBottomJump" class="sticky bottom-2 z-[5] flex justify-end pr-1">
+            <button
+                class="rounded-full bg-primary text-white px-3 py-1.5 text-xs font-semibold shadow hover:opacity-90 transition"
+                (click)="jumpToLatest()">
+                Ir al final ↓
+            </button>
+        </div>
+    </div>
+    <!-- Message Input -->
+    <footer class="p-4 bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 shrink-0">
+        <!-- Block banner -->
+        <div *ngIf="isConversationBlocked || !isConversationFriend" class="mb-3 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-2.5 text-sm text-red-700 dark:text-red-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            <span *ngIf="isBlockedByMe">Bloqueaste a este usuario. No podés enviar ni recibir mensajes.</span>
+            <span *ngIf="isBlockedByOther">Este usuario te bloqueó. No podés enviarle mensajes.</span>
+            <span *ngIf="!isConversationBlocked && !isConversationFriend">Solo podés enviar mensajes a usuarios que tenés agregados.</span>
+            <button
+                *ngIf="isBlockedByMe"
+                class="ml-auto rounded-md border border-amber-400 text-amber-700 dark:text-amber-300 px-2.5 py-1 text-xs font-semibold hover:bg-amber-50 dark:hover:bg-amber-950 disabled:opacity-60"
+                [disabled]="blockActionLoading"
+                (click)="unblockCurrentConversationUser()">
+                {{ blockActionLoading ? 'Procesando...' : 'Desbloquear' }}
+            </button>
+        </div>
+        <p *ngIf="uploadErrorMessage" class="mb-2 text-xs text-red-500">{{ uploadErrorMessage }}</p>
+        <div *ngIf="selectedAttachment" class="mb-2 flex items-center justify-between rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+                <img [src]="selectedAttachment.previewUrl" [alt]="selectedAttachment.name" class="h-10 w-10 rounded object-cover" />
+                <span class="truncate">Attached: {{ selectedAttachment.name }}</span>
+            </div>
+            <button (click)="clearAttachment()" class="material-symbols-outlined text-base">close</button>
+        </div>
+        <div class="flex items-center gap-2" [class.opacity-50]="!canSendMessages" [class.pointer-events-none]="!canSendMessages">
+            <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" accept="image/*" [disabled]="!canSendMessages" />
+            <div class="flex items-center gap-1 text-primary">
+                <button (click)="fileInput.click()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-transform hover:scale-105">
+                    <span class="material-symbols-outlined">attach_file</span>
+                </button>
+                <button (click)="fileInput.click()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                    <span class="material-symbols-outlined">image</span>
+                </button>
+                <button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                    <span class="material-symbols-outlined">gif_box</span>
+                </button>
+            </div>
+            <div class="flex-1 relative">
+                <input
+                    class="w-full rounded-full border-none bg-slate-100 dark:bg-slate-800 px-4 py-2 text-sm focus:ring-1 focus:ring-primary"
+                    [placeholder]="canSendMessages ? 'Aa' : 'No disponible'" type="text" [(ngModel)]="newMessageContent" (ngModelChange)="onMessageInputChange()" (keyup.enter)="sendMessage()" [disabled]="!canSendMessages" />
+                <button class="absolute right-2 top-1/2 -translate-y-1/2 text-primary p-1">
+                    <span class="material-symbols-outlined">mood</span>
+                </button>
+            </div>
+            <button *ngIf="canSendMessages" class="text-primary p-2" (click)="sendMessage()">
+                <span class="material-symbols-outlined fill-1">{{ newMessageContent.trim() || selectedAttachment ? 'send' : 'thumb_up'
+                    }}</span>
+            </button>
+        </div>
+    </footer>
+</section>
+<div *ngIf="!activeConversation"
+    class="flex-1 min-w-0 flex items-center justify-center bg-slate-50 dark:bg-slate-900/50 flex-col gap-4 text-slate-400 animate-fade-in">
+    <span class="material-symbols-outlined text-6xl">chat</span>
+    <p class="text-lg">Select a conversation to start messaging</p>
+</div>

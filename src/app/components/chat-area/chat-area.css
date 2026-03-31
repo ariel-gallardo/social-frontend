@@ -1,0 +1,19 @@
+/* Loading spinner for older messages */
+#chat-messages-scroll {
+  scroll-behavior: smooth;
+}
+
+.chat-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(100, 116, 139, 0.3);
+  border-top-color: var(--color-primary, #6366f1);
+  border-radius: 50%;
+  animation: chat-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes chat-spin {
+  to { transform: rotate(360deg); }
+}

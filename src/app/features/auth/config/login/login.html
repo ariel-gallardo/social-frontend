@@ -1,0 +1,62 @@
+<div class="auth-shell min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+    <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl animate-float-soft"></div>
+        <div class="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-sky-400/10 blur-3xl animate-float-soft"></div>
+    </div>
+    <div
+        class="auth-card animate-slide-up max-w-md w-full bg-white/95 dark:bg-slate-800/95 rounded-3xl p-8 border border-slate-100 dark:border-slate-700">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent animate-pop-in">
+                SocialNet</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-2">Welcome back! Please sign in to continue.</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+            <div>
+                <label for="username"
+                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <span class="material-symbols-outlined text-lg">person</span>
+                    </span>
+                    <input type="text" id="username" formControlName="username"
+                        class="pl-10 w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none dark:text-white hover-lift"
+                        placeholder="Enter your username" />
+                </div>
+            </div>
+
+            <div>
+                <label for="password"
+                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <span class="material-symbols-outlined text-lg">lock</span>
+                    </span>
+                    <input type="password" id="password" formControlName="password"
+                        class="pl-10 w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none dark:text-white hover-lift"
+                        placeholder="Enter your password" />
+                </div>
+            </div>
+
+            <div *ngIf="errorMessage"
+                class="p-3 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-lg text-sm flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">error</span>
+                {{ errorMessage }}
+            </div>
+
+            <button type="submit" [disabled]="loginForm.invalid || isLoading"
+                class="w-full bg-primary hover:bg-blue-600 text-white font-medium rounded-xl px-4 py-3 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover-lift">
+                <ng-container *ngIf="!isLoading">
+                    Sign In
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </ng-container>
+                <span *ngIf="isLoading" class="material-symbols-outlined animate-spin">progress_activity</span>
+            </button>
+        </form>
+
+        <p class="text-center mt-8 text-sm text-slate-500 dark:text-slate-400">
+            Don't have an account?
+            <a routerLink="/register" class="text-primary hover:underline font-medium cursor-pointer">Register here</a>
+        </p>
+    </div>
+</div>
