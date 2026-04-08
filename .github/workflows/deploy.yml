@@ -1,0 +1,22 @@
+name: Deploy to Vercel
+on:
+  push:
+    branches:
+      - development
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repo
+        uses: actions/checkout@v3
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy a Vercel
+        run: npx vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
